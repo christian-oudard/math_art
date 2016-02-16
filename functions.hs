@@ -8,10 +8,11 @@ import System.Random.MWC.Distributions
 main = do
   g <- createSystemRandom
   f <- makeNoiseFunc g
+  let funcs = [sin, atanh . sin]
   display
     (InWindow "" (round screenWidth, round screenHeight) (0,0))
     black
-    (picture f)
+    (picture funcs)
 
 -- Constants
 screenWidth, screenHeight, pxPerUnit :: Float
@@ -26,14 +27,14 @@ rightBound = (screenWidth / 2) / pxPerUnit
 -- Drawing
 grey = greyN 0.5
 
-picture :: (Float -> Float) -> Picture
-picture f = scaling $ Pictures
+picture :: [(Float -> Float)] -> Picture
+picture fs = scaling $ Pictures $
   [ Color grey $ Line $ plot $ const 1
   , Color grey $ Line $ plot $ const 0
   , Color grey $ Line $ plot $ const (-1)
-  , Color white $ Line $ plot $ f
-  , Color green $ Line $ plot $ diff f
   ]
+  ++ [Color white $ Line $ plot $ f | f <- fs]
+  ++ [Color red $ Line $ plot $ diff f | f <- fs]
 
 plot f = [(x, f x) | x <- screenMesh $ 1/100]
 
