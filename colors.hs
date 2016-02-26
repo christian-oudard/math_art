@@ -18,7 +18,7 @@ main = do
   colors <- genColors 10000 gen
   display
     (InWindow "" (round screenWidth, round screenHeight) (0,0))
-    (toScreen gray)
+    (toGloss gray)
     (colorStar $ sortLightness colors)
   return ()
 
@@ -50,9 +50,9 @@ genColor gen = do
 genComponent :: GenIO -> IO Int
 genComponent g = uniformR (0,255) g
 
-toScreen :: CIELCH Double -> Color
-toScreen color = toScreenAlpha color 1
-toScreenAlpha color alpha = makeColor r g b alpha
+toGloss :: CIELCH Double -> Color
+toGloss color = toGlossAlpha color 1
+toGlossAlpha color alpha = makeColor r g b alpha
   where
     (RGB r' g' b') = toRGB color
     r = realToFrac r' / 255
@@ -68,10 +68,10 @@ radToDeg r = 360 * r / tau
 colorStar :: [CIELCH Double] -> Picture
 colorStar colors = scaling $ Pictures $ map colorDot colors
 
-colorDot c = Color (toScreenAlpha c 0.8) $ Translate x y $ circleSolid 6
+colorDot c = Color (toGlossAlpha c 0.8) $ Translate x y $ circleSolid 6
   where (x, y) = colorPositionPolar c
 
-colorLine c = Color (toScreenAlpha c 0.6) $ Line [(0, 0), (x, y)]
+colorLine c = Color (toGlossAlpha c 0.6) $ Line [(0, 0), (x, y)]
   where (x, y) = polar (hue c) (chroma c)
 
 colorPositionPolar c = polar (hue c) (chroma c)
