@@ -23,7 +23,7 @@ frame' t = Scale 200 200 $ Pictures
   [ Color bg2 $ circleSolid 0.05
   , Color bg2 $ ThickCircle 2 0.05
   , Color lineColor $ drawLines lines
-  -- [ drawPoints $ sortZ rotatedPoints
+  , drawPoints $ rotatedPoints
   ]
   where
     points = octaplex
@@ -38,12 +38,8 @@ drawPoints :: [Vec] -> Picture
 drawPoints points = Pictures $ map drawPoint points
 
 drawPoint :: Vec -> Picture
-drawPoint p = Translate x y $ Color color $ circleSolid (0.05 + 0.005 * z')
-  where
-    (x, y) = vecToPoint p
-    z' = realToFrac $ p ! (3, 1)
-    -- color = toGloss $ CIELAB 90 0 0
-    color = toGloss $ pointColor4d p
+drawPoint p = Translate x y $ Color lineColor $ circleSolid 0.008
+  where (x, y) = vecToPoint p
 
 pointColor4d :: Vec -> CIELAB Double
 pointColor4d p = CIELAB (80 + 10*z) (7*w) (6*w)
