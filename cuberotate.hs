@@ -6,26 +6,33 @@ import Data.Matrix ((!))
 import Data.List (sortBy)
 import Data.Function (on)
 
+bg1, bg2, lineColor :: Color
+bg1 = toGloss $ CIELAB 5 (-5) (-15)
+bg2 = toGloss $ CIELAB 10 (-5) (-20)
+lineColor = toGloss $ CIELAB 70 5 7
+
 main = do
-  animate (InWindow "" (1600, 900) (0,0))
-    black
+  animate (InWindow "Octaplex" (1600, 900) (0,0))
+    bg1
     frame
+
 
 frame t = frame' (realToFrac t)
 frame' :: Double -> Picture
 frame' t = Scale 200 200 $ Pictures
-  [ drawLines lines
-  , drawPoints $ sortZ rotatedPoints
+  [ Color bg2 $ circleSolid 0.05
+  , Color bg2 $ ThickCircle 2 0.05
+  , Color lineColor $ drawLines lines
+  -- [ drawPoints $ sortZ rotatedPoints
   ]
   where
-    points = hyperCubePoints 4
+    points = octaplex
     rotatedPoints = map (rotation *) points
-    lines = [ (rotatedPoints !! i, rotatedPoints !! j) | (i, j) <- hyperCubeEdges 4 ]
+    lines = [ (rotatedPoints !! i, rotatedPoints !! j) | (i, j) <- octaplexEdges ]
     rotation = rotation4d t
 
 drawLines :: [(Vec, Vec)] -> Picture
-drawLines lines = Pictures [ Color color $ Line [vecToPoint a, vecToPoint b] | (a, b) <- lines ]
-  where color = toGloss $ CIELAB 80 0 0
+drawLines lines = Pictures [ Line [vecToPoint a, vecToPoint b] | (a, b) <- lines ]
 
 drawPoints :: [Vec] -> Picture
 drawPoints points = Pictures $ map drawPoint points
