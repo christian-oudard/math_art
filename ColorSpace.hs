@@ -3,22 +3,22 @@ module ColorSpace
   , toGlossAlpha
   , gray
   , rgb
-  , lightness
-  , chroma
-  , hue
-  , blueyellow
-  , greenred
+  , labL
+  , labA
+  , labB
+  , labHue
+  , labChroma
   )
 where
 
-import Data.Prizm.Color (RGB(..), CIELCH(..))
-import Data.Prizm.Color.CIE.LCH (toRGB, fromRGB)
+import Data.Prizm.Color (RGB(..), CIELAB(..))
+import Data.Prizm.Color.CIE.LAB (toRGB, fromRGB)
 import Graphics.Gloss
   ( Color
   , makeColor
   )
 
-toGloss :: CIELCH Double -> Color
+toGloss :: CIELAB Double -> Color
 toGloss color = toGlossAlpha color 1
 toGlossAlpha color alpha = makeColor r g b alpha
   where
@@ -27,18 +27,18 @@ toGlossAlpha color alpha = makeColor r g b alpha
     g = realToFrac g' / 255
     b = realToFrac b' / 255
 
-gray :: CIELCH Double
-gray = CIELCH 50 0 0
+gray :: CIELAB Double
+gray = CIELAB 50 0 0
 
-rgb :: Integer -> Integer -> Integer -> CIELCH Double
+rgb :: Integer -> Integer -> Integer -> CIELAB Double
 rgb r g b = fromRGB $ RGB r g b
 
-lightness, chroma, hue, blueyellow, greenred :: CIELCH Double -> Double
-lightness (CIELCH l _ _) = realToFrac l / 100
-chroma (CIELCH _ c _) = realToFrac c
-hue (CIELCH _ _ h) = degToRad $ realToFrac h
-blueyellow c = chroma c * sin (hue c)
-greenred c = chroma c * cos (hue c)
+labL, labA, labB :: CIELAB Double -> Double
+labL (CIELAB l _ _) = realToFrac l
+labA (CIELAB _ c _) = realToFrac c
+labB (CIELAB _ _ h) = realToFrac h
+labHue c = atan2 (labA c) (labB c)
+labChroma c = sqrt $ (labA c)^2 + (labB c)^2
 
 tau = 2*pi
 degToRad d = tau * d / 360

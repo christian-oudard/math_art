@@ -1,26 +1,21 @@
 import ColorSpace
 import Graphics.Gloss
-  ( display
-  , Picture(Pictures, Scale, Translate, Line, Color)
-  , Display(InWindow)
-  , Color
-  , makeColor
-  , circleSolid
-  )
 
+import Data.Matrix ((!))
 import Data.List (sortBy)
 import Data.Function (on)
-import Data.Prizm.Color (RGB(..), CIELCH(..))
-import Data.Prizm.Color.CIE.LCH (toRGB, fromRGB)
+import Data.Prizm.Color (CIELAB(..))
 import System.Random.MWC (GenIO, createSystemRandom, uniformR)
+
+import FourDee
 
 main = do
   gen <- createSystemRandom
-  colors <- genColors 10000 gen
-  display
+  colors <- genColors 900 gen
+  animate
     (InWindow "" (round screenWidth, round screenHeight) (0,0))
     (toGloss gray)
-    (colorCloud $ sortLightness colors)
+    (frame colors)
   return ()
 
 -- Constants
@@ -28,9 +23,9 @@ screenWidth, screenHeight, pxPerUnit :: Float
 screenWidth = 1600
 screenHeight = 900
 pxPerUnit = 3
-scaling = Scale pxPerUnit pxPerUnit 
+scaling = Scale pxPerUnit pxPerUnit
 
--- Colors
+-- Color Generation
 genColors n gen = sequence $ replicate n $ genColor gen
 genColor gen = do
   r <- genComponent gen
@@ -42,38 +37,22 @@ genComponent g = uniformR (0,255) g
 
 -- Drawing
 
-colorCloud :: [CIELCH Double] -> Picture
-colorCloud colors = scaling $ Pictures $ map colorDot colors
-
-colorDot c = Color (toGlossAlpha c 0.8) $ Translate x y $ circleSolid 1.5
-  where (x, y) = colorPositionPolar c
-
-colorLine c = Color (toGlossAlpha c 0.6) $ Line [(0, 0), (x, y)]
-  where (x, y) = polar (realToFrac $ hue c) (realToFrac $ chroma c)
-
-colorPositionPolar c = polar (realToFrac $ hue c) (realToFrac $ chroma c)
-colorPositionSide c = (-greenred c, -100 + 200 * lightness c)
-
-sortLightness = sortBy cmp
-  where cmp = compare `on` (\c -> (lightness c, chroma c))
-sortBlueYellow = sortBy cmp
-  where cmp = compare `on` (\c -> -blueyellow c)
-
-filterColorsLightness = filter pred
+frame colors t' = scaling $ Pictures $ map (uncurry drawDot) (sortZ drawData)
   where
-    pred c =
-      ( lightness c > 0.3
-      && lightness c < 0.8
-      )
+    t = realToFrac t'
+    initialPositions = map colorPosition colors
+    currentPositions = map (rotation3d t *) initialPositions
+    drawData = zip colors currentPositions
 
-filterColorsRing = filter pred
+sortZ = sortBy (compare `on` key)
   where
-    pred c =
-      ( lightness c > 0.6
-      && lightness c < 0.7
-      && chroma c > 20
-      && chroma c < 43
-      )
+    key :: (CIELAB Double, Vec) -> Double
+    key (c, v) = v ! (3,1)
 
-polar :: Float -> Float -> (Float, Float)
-polar theta r = (r * cos theta, r * sin theta)
+drawDot :: CIELAB Double -> Vec -> Picture
+drawDot c v = Color (toGloss c) $ Translate x y $ circleSolid 3
+  where
+    (x, y) = vecToPoint v
+
+colorPosition c = vec [labA c, labB c, labL c - 50]
+
