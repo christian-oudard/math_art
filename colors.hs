@@ -6,8 +6,7 @@ import Data.List (sortBy)
 import Data.Function (on)
 import Data.Prizm.Color (CIELAB(..))
 import System.Random.MWC (GenIO, createSystemRandom, uniformR)
-
-import FourDee
+import Geometry
 
 main = do
   gen <- createSystemRandom

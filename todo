@@ -1,0 +1,17 @@
+- Random points on or inside n-sphere.
+    http://math.stackexchange.com/questions/87230/picking-random-points-in-the-volume-of-sphere-with-uniform-probability/87238#87238
+- Color gradients, paths through colorspace.
+  - Bounded paths, isomorphic to a segment.
+- Circle lattice
+- Fractals
+- Graph handling 
+- Delaunay triangulation, voronoi cells
+  - Convex hull
+- Oscilloscope
+  - Input from microphone to functions
+- Musical improvisation
+  - Output from functions to sound
+  - Recognition of sound patterns
+    - Segmentation of sound vs silence.
+    - Similarity metrics
+- Generate octaplex via symbol {3,4,3}

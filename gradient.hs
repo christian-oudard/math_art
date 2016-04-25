@@ -1,4 +1,4 @@
-import FourDee
+import Geometry
 import ColorSpace
 import Data.Prizm.Color (CIELAB(..))
 import Graphics.Gloss
