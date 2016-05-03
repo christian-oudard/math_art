@@ -1,11 +1,23 @@
+- Spatial hashing, grid index
+- Generate points in plane that are well distributed with respect to distance from each other.
+    Minimum distance
+    Distance distribution
+    Isotropy
+    poisson disk sampling (delone set)
+      http://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph07-poissondisk.pdf
+      https://bl.ocks.org/mbostock/dbb02448b0f93e4c82c3
+    CVD, centroidal voronoi diagram
+      Lloyd's algorithm, relax to new centroid.
+- Planar graphs and circle packings
+    Koebe-Andreev-Thurston circle packing theorem 
+- Fractals
+  - circle lattice
 - Higher dimensional tilings
 - Random points on or inside n-sphere.
     http://math.stackexchange.com/questions/87230/picking-random-points-in-the-volume-of-sphere-with-uniform-probability/87238#87238
+- Intersections in real projective space, RP3
 - Color gradients, paths through colorspace.
   - Bounded paths, isomorphic to a segment.
-- Circle lattice
-- Fractals
-- Graph handling 
 - Delaunay triangulation, voronoi cells
   - Convex hull
 - Oscilloscope
@@ -16,4 +28,8 @@
     - Segmentation of sound vs silence.
     - Similarity metrics
 - Generate octaplex via symbol {3,4,3}
+- Convex polygons
+  - separating axis to test overlap
+  - centroid of polygon
+
 
