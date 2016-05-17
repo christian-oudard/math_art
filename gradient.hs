@@ -11,9 +11,9 @@ main = do
     drawing
   return ()
 
--- red' = CIELAB 50 50 0
-red' = rgb 255 0 0
-blue' = CIELAB 30 0 (-50)
+greenIcecream = hexColor 0x7ecf92
+yellowIcecream = hexColor 0xd6a642
+purpleIcecream = hexColor 0x4b3c8a
 
 uniformStops n = [0..n]
 
@@ -21,27 +21,15 @@ drawing :: Picture
 drawing = scaling $ Pictures $ [ drawSquare (colorAtIndex i) i | i <- [-7..7] ]
   -- [ Color (toGloss red') $ Polygon $ pointsToPath $ squareAt $ vec[0,1]
 
-colorAtIndex = linearGradient red' blue' . indexToStop
-indexToStop i = (i - (-7)) / (7 -(-7))
+grad = rainbowGradient greenIcecream yellowIcecream purpleIcecream
+
+colorAtIndex :: Double -> CIELAB Double
+colorAtIndex = grad . f
+  where f i = (i - (-7)) / (7 -(-7))
 
 drawSquare color i =  Color (toGloss color) $ polygon
   where
     polygon = Polygon $ pointsToPath $ squareAt $ vec[i,0]
-
-interpolateVec :: Vec -> Vec -> Double -> Vec
-interpolateVec start end s = start + fmap (*s) (end - start)
-
-linearGradient :: CIELAB Double -> CIELAB Double -> Double -> CIELAB Double
-linearGradient start end s = 
-  let start' = colorToVec start
-      end' = colorToVec end
-   in vecToColor $ interpolateVec start' end' s
-
-colorToVec :: CIELAB Double -> Vec
-colorToVec (CIELAB l a b) = vec [l, a, b]
-
-vecToColor :: Vec -> CIELAB Double
-vecToColor v = CIELAB (v!(1,1)) (v!(2,1)) (v!(3,1))
 
 -- Move to GlossHelper.hs?
 pointsToPath :: [Vec] -> [Point]

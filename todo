@@ -13,8 +13,6 @@
 - Fractals
   - circle lattice
 - Higher dimensional tilings
-- Random points on or inside n-sphere.
-    http://math.stackexchange.com/questions/87230/picking-random-points-in-the-volume-of-sphere-with-uniform-probability/87238#87238
 - Intersections in real projective space, RP3
 - Color gradients, paths through colorspace.
   - Bounded paths, isomorphic to a segment.
@@ -31,5 +29,8 @@
 - Convex polygons
   - separating axis to test overlap
   - centroid of polygon
+- Plane parametric curves
+  - k-orthotomics
 
-
+X Random points on or inside n-sphere.
+    http://math.stackexchange.com/questions/87230/picking-random-points-in-the-volume-of-sphere-with-uniform-probability/87238#87238

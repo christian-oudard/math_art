@@ -1,53 +1,126 @@
 module Geometry
   ( Vec
   , vec
+  , vdot
+  , vmag2
   , vmag
   , vnorm
+  , vperp2d
+  , vcross3d
+  , vmul
+  , vdiv
+  , vmidpoint
+  , lerp
+  , vlerp
   , getX
   , getY
   , getZ
-  , getW
   , vecToList
   , vecToPoint
   , hyperCubePoints
   , hyperCubeEdges
   , octaplex
   , octaplexEdges
+  , cartesianProduct
   , rot2d
-  , rot3d
+  , rot3dx
+  , rot3dy
+  , rot3dz
   , rot4d
-  , rotNd
   , rotation3d
   , rotation4d
   , embedMatrix
   , switchAxes
   , tau
+  , circle2d
   ) where
 
 import Data.Matrix as M
 import qualified Data.Vector as V
 
-type Vec = Matrix Double
+type Vec = Matrix Double -- 1-column matrix
 
 vec :: [Double] -> Vec
 vec = colVector . V.fromList
 
-vmag :: Vec -> Double
-vmag v = sqrt $ sum $ fmap (^2) v
-
-getX, getY, getZ, getW :: Vec -> Double
+getX, getY, getZ :: Vec -> Double
 getX v = get_ 1 v
 getY v = get_ 2 v
 getZ v = get_ 3 v
-getW v = get_ 4 v
 get_ n v = v ! (n,1)
+
+vdot :: Vec -> Vec -> Double
+vdot a b = V.sum $ getCol 1 $ elementwise (*) a b
+
+vmag2 :: Vec -> Double
+vmag2 v = vdot v v
+
+vmag :: Vec -> Double
+vmag = sqrt . vmag2
+
+vnorm :: Vec -> Vec
+vnorm v = if m > 0 then vdiv m v else v
+  where m = vmag v
+
+vperp2d :: Vec -> Vec
+vperp2d v = vec [-y, x]
+  where
+    x = getX v
+    y = getY v
+
+vcross3d :: Vec -> Vec -> Vec
+vcross3d v1 v2 = vec [x,y,z]
+  where
+    [x1, y1, z1] = V.toList $ getCol 1 v1
+    [x2, y2, z2] = V.toList $ getCol 1 v2
+    x = y1*z2 - y2*z1
+    y = z1*x2 - z2*x1
+    z = x1*y2 - x2*y1
+
+vmul :: Double -> Vec -> Vec
+vmul c = fmap (*c)
+
+vdiv :: Double -> Vec -> Vec
+vdiv c = fmap (/c)
+
+vmidpoint :: Vec -> Vec -> Vec
+vmidpoint a b = vdiv 2 (a+b)
+
+
+lerp :: Double -> Double -> (Double -> Double)
+lerp start end s = start + s * (end - start)
+
+vlerp :: Vec -> Vec -> (Double -> Vec)
+-- Linear interpolation on vectors.
+vlerp start end s = start + (vmul s (end - start))
+
+data Line = Line Vec Vec -- point, tangent
+  deriving (Show)
+
+instance Eq Line where
+  a == b  = ax0 == bx0 && at == bt
+    where
+      (Line ax0 at) = canonicalLine a
+      (Line bx0 bt) = canonicalLine b
+
+closestOnLine :: Vec -> Line -> Vec
+closestOnLine p line@(Line x0 t) = lineAt line sMin 
+  where
+    sMin = -(v `vdot` t) / (vmag2 t)
+    v = x0 - p
+
+lineAt :: Line -> Double -> Vec
+lineAt (Line x0 t) = vlerp x0 (x0 + t)
+
+canonicalLine :: Line -> Line
+canonicalLine line@(Line point tangent) = Line point' tangent'
+  where
+    tangent' = vnorm tangent
+    point' = closestOnLine origin line
+    origin = zero (nrows point) 1
 
 vecToList :: Vec -> [Double]
 vecToList = V.toList . M.getCol 1
-
-vnorm :: Vec -> Vec
-vnorm v = if m > 0 then fmap (/m) v else v
-  where m = vmag v
 
 vecToPoint :: Vec -> (Float, Float)
 vecToPoint = (\[x,y] -> (x,y)) . map realToFrac . take 2 . vecToList
@@ -57,15 +130,17 @@ rot2d theta = M.transpose $ M.fromLists [
     [-sin theta, cos theta] -- new Y axis
   ]
 
-rot3d theta = embedMatrix (rot2d theta) (identity 3)
-rot4d theta = embedMatrix (rot2d theta) (identity 4)
-rotNd n theta = embedMatrix (rot2d theta) (identity n)
+rot3dx alpha = switchAxes 2 3 $ switchAxes 3 1 $ rot3dz alpha
+rot3dy beta = switchAxes 1 3 $ switchAxes 3 2 $ rot3dz beta
+rot3dz gamma = embedMatrix (rot2d gamma) (identity 3)
 
 rotation3d t' = let t = t'*(4/5) in (
-  (rot3d $ t * tau/61)
-  * (switchAxes 2 3 $ rot3d $ t * tau/73) 
-  * (switchAxes 1 2 $ switchAxes 2 3 $ rot3d $ t * tau/97) 
+  (rot3dx $ t * tau/61)
+  * (rot3dy $ t * tau/73) 
+  * (rot3dz $ t * tau/97) 
   )
+
+rot4d theta = embedMatrix (rot2d theta) (identity 4)
 
 rotation4d t' = let t = t'*(1/2)+100 in (
   -- (rot4d $ t * tau/61)
@@ -79,7 +154,7 @@ rotation4d t' = let t = t'*(1/2)+100 in (
 switchAxes a1 a2 = switchRows a1 a2 . switchCols a1 a2
 
 hyperCubePoints :: Int -> [Vec]
-hyperCubePoints n = map vec $ crossProduct $ replicate n [1, -1]
+hyperCubePoints n = map vec $ cartesianProduct $ replicate n [1, -1]
 
 hyperCubeEdges :: Int -> [(Int, Int)]
 hyperCubeEdges = snd . hyperCubeGraph
@@ -96,9 +171,9 @@ hyperCubeGraph n = (prevNodes ++ newNodes, prevEdges ++ newEdges ++ crossEdges)
     shiftEdges es = map (\(a,b) -> (a+dist,b+dist)) es
     dist = 2^(n-1)
 
-crossProduct :: [[a]] -> [[a]]
-crossProduct (axis:[]) = [ [v] | v <- axis ]
-crossProduct (axis:rest) = [ v:r | v <- axis, r <- crossProduct rest ]
+cartesianProduct :: [[a]] -> [[a]]
+cartesianProduct (axis:[]) = [ [v] | v <- axis ]
+cartesianProduct (axis:rest) = [ v:r | v <- axis, r <- cartesianProduct rest ]
 
 octaplex = map vec $
   [ [1, 1, 1, 1]
@@ -149,3 +224,24 @@ embedMatrix a b = matrix (nrows b) (ncols b) (\(x, y) ->
   )
 
 tau = 2*pi
+
+circle2d :: Vec -> Double -> (Double -> Vec)
+circle2d center radius s = center + (rot2d (tau*s) * radiusVector)
+  where
+    radiusVector = vec [radius, 0]
+
+-- triangleCenter3d :: Vec -> Vec -> Vec -> Vec
+-- triangleCenter3d p q r = 
+--   let
+--     a = q - p
+--     b = r - p
+--     m1 = vmidpoint p q
+--     m2 = vmidpoint p r
+--     n = vnorm $ vcross3d a b
+--     a' = rotateAxis3 n
+--   in
+--     zero 3 1
+
+-- rotateAxis3 :: Vec -> Double -> (Vec -> Vec)
+-- rotateAxis3 axis theta =  
+
