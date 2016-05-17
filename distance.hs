@@ -1,3 +1,7 @@
+-- Convert pointsNearNode to give LNodes instead of points, and use a GridIndex
+-- Should the GridIndex store LNodes?
+-- Convert from Point to Vec until we are displaying
+
 import Data.List (tails)
 import Data.Maybe (fromMaybe)
 
@@ -19,13 +23,27 @@ picHeight = 700 :: Double
 centerX = picWidth / 2
 centerY = picHeight / 2
 
-main = do
+makeGraph :: IO (Gr Point ())
+makeGraph = do
   g <- createSystemRandom
-  dots <- genDotsNormal g 7
+  dots <- genDotsNormal g 20
+  return $ disjointGraphFromPoints dots
 
-  let graph = completeGraphFromPoints dots
-      -- weightedGraph = addEdgeLengths graph
-      -- spanningTree = msTree weightedGraph
+pointsNearNode :: Gr Point () -> Node -> Float -> [Point]
+pointsNearNode gr i maxDist = ufold f [] rest
+  where
+    (maybeStart, rest) = match i gr
+    startPoint = lab' $ fromMaybe (error "") maybeStart
+    f c prev =
+      let
+         p = lab' c
+         d = dist startPoint p
+      in prev ++ (if d < maxDist then [p] else []) 
+
+main = do
+  graph <- makeGraph
+  -- weightedGraph = addEdgeLengths graph
+  -- spanningTree = msTree weightedGraph
 
   let drawing = drawGraph graph
    in display (InWindow "" (round picWidth, round picHeight) (100, 100)) black $ drawing
@@ -47,6 +65,9 @@ allEdges n = map edgeToUEdge $ pairs [1..n]
 
 completeGraphFromPoints :: [Point] -> Gr Point ()
 completeGraphFromPoints pts = mkGraph (zip [1..] pts) (allEdges (length pts))
+
+disjointGraphFromPoints :: [Point] -> Gr Point ()
+disjointGraphFromPoints pts = mkGraph (zip [1..] pts) noEdges
 
 addEdgeLengths :: Gr Point () -> Gr Point Float
 addEdgeLengths g = gmap f g
@@ -82,8 +103,8 @@ genDotsNormal :: GenIO -> Int -> IO [Point]
 genDotsNormal g n = sequence . replicate n $ loop
   where
     loop = do
-      x <- normal 0 150 g
-      y <- normal 0 150 g
+      x <- normal 0 100 g
+      y <- normal 0 100 g
       return (realToFrac x, realToFrac y)
 
 drawGraph :: Gr Point a -> Picture
