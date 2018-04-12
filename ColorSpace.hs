@@ -16,8 +16,8 @@ module ColorSpace
   )
 where
 
-import Data.Prizm.Color (RGB(..), CIELAB(..))
-import Data.Prizm.Color.CIE.LAB (toRGB, fromRGB)
+import Data.Convertible
+import Data.Prizm.Color (RGB(..), LAB(..), ColorCoord(..), mkRGB, mkLAB)
 import qualified Data.Matrix as M
 import Geometry
 import Graphics.Gloss
@@ -30,41 +30,47 @@ import Graphics.Gloss
 degToRad d = tau * d / 360
 radToDeg r = 360 * r / tau
 
-rgb :: Integer -> Integer -> Integer -> CIELAB Double
-rgb r g b = fromRGB $ RGB r g b
+rgb :: Integer -> Integer -> Integer -> LAB
+rgb r g b = convert $ mkRGB (fromIntegral r) (fromIntegral g) (fromIntegral b)
 
-gray :: CIELAB Double
-gray = CIELAB 50 0 0
+gray :: LAB
+gray = mkLAB 50 0 0
 
-toGloss :: CIELAB Double -> Color
+lab2rgb :: LAB -> RGB
+lab2rgb = convert
+
+toGloss :: LAB -> Color
 toGloss color = toGlossAlpha color 1
 toGlossAlpha color alpha = makeColor r g b alpha
   where
-    (RGB r' g' b') = toRGB color
+    ColorCoord (r', g', b') = unRGB $ lab2rgb $ color
     r = realToFrac r' / 255
     g = realToFrac g' / 255
     b = realToFrac b' / 255
 
-labL, labA, labB :: CIELAB Double -> Double
-labL (CIELAB l _ _) = realToFrac l
-labA (CIELAB _ c _) = realToFrac c
-labB (CIELAB _ _ h) = realToFrac h
+labL, labA, labB :: LAB -> Double
+labL color  = realToFrac l
+  where ColorCoord (l, _, _) = unLAB color
+labA color  = realToFrac a
+  where ColorCoord (_, a, _) = unLAB color
+labB color  = realToFrac b
+  where ColorCoord (_, _, b) = unLAB color
 labHue c = atan2 (labA c) (labB c)
 labChroma c = sqrt $ (labA c)^2 + (labB c)^2
 
-hexColor :: Integer -> CIELAB Double
+hexColor :: Integer -> LAB
 hexColor n = rgb r g b
   where
     (n', b) = n `divMod` 0x100
     (r, g) = n' `divMod` 0x100
 
-polarColor :: Double -> Double -> Double -> CIELAB Double
-polarColor l chroma hue = CIELAB l a b
+polarColor :: Double -> Double -> Double -> LAB
+polarColor l chroma hue = mkLAB l a b
   where
     a = chroma * cos hue
     b = chroma * sin hue
 
-gradStops :: Int -> (Double -> CIELAB Double) -> [CIELAB Double]
+gradStops :: Int -> (Double -> LAB) -> [LAB]
 gradStops n grad = map (grad . f) [0..n-1]
   where
     f i = (i' / (n' - 1))
@@ -72,28 +78,29 @@ gradStops n grad = map (grad . f) [0..n-1]
         i' = realToFrac i
         n' = realToFrac n
 
-linearGradient :: CIELAB Double -> CIELAB Double -> (Double -> CIELAB Double)
+linearGradient :: LAB -> LAB -> (Double -> LAB)
 linearGradient start end s = vecToColor $ vlerp start' end' s
   where
     start' = colorToVec start
     end' = colorToVec end
 
-hueGradient:: Double -> Double -> Double -> Double -> (Double -> CIELAB Double)
+hueGradient:: Double -> Double -> Double -> Double -> (Double -> LAB)
 hueGradient l chroma startHue endHue s = polarColor l chroma hue
   where
     hue = lerp startHue endHue s
 
--- circleGradient :: CIELAB Double -> CIELAB Double -> CIELAB Double ->  (Double -> CIELAB Double)
+-- circleGradient :: LAB -> LAB -> LAB ->  (Double -> LAB)
 -- circleGradient a b c s = vecToColor $ circle s
 --   where
 --     [a', b', c'] = map colorToVec [a, b, c]
 --     circle = circle3p a b c
 
-colorToVec :: CIELAB Double -> Vec
-colorToVec (CIELAB l a b) = vec [l, a, b]
+colorToVec :: LAB -> Vec
+colorToVec color = vec [l, a, b]
+  where (ColorCoord (l, a, b)) = unLAB color
 
-vecToColor :: Vec -> CIELAB Double
-vecToColor v = CIELAB (getX v) (getY v) (getZ v)
+vecToColor :: Vec -> LAB
+vecToColor v = mkLAB (getX v) (getY v) (getZ v)
 
 -- Tests
 -- labL $ polarColor 50 45 25 == 50.0

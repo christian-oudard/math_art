@@ -1,15 +1,16 @@
 import Geometry
 import ColorSpace
 import Graphics.Gloss
-import Data.Prizm.Color (CIELAB(..))
+import Data.Prizm.Color (LAB(..), mkLAB)
+
 import Data.Matrix ((!))
 import Data.List (sortBy)
 import Data.Function (on)
 
 bg1, bg2, lineColor :: Color
-bg1 = toGloss $ CIELAB 5 (-5) (-15)
-bg2 = toGloss $ CIELAB 10 (-5) (-20)
-lineColor = toGloss $ CIELAB 70 5 7
+bg1 = toGloss $ mkLAB 5 (-5) (-15)
+bg2 = toGloss $ mkLAB 10 (-5) (-20)
+lineColor = toGloss $ mkLAB 70 5 7
 
 main = do
   animate (InWindow "Octaplex" (1600, 900) (0,0))
@@ -41,8 +42,8 @@ drawPoint :: Vec -> Picture
 drawPoint p = Translate x y $ Color lineColor $ circleSolid 0.008
   where (x, y) = vecToPoint p
 
-pointColor4d :: Vec -> CIELAB Double
-pointColor4d p = CIELAB (80 + 10*z) (7*w) (6*w)
+pointColor4d :: Vec -> LAB
+pointColor4d p = mkLAB (80 + 10*z) (7*w) (6*w)
   where
     z = p ! (3, 1)
     w = p ! (4, 1)

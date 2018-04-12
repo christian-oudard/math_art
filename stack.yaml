@@ -1,0 +1,7 @@
+resolver: lts-10.10
+packages:
+- '.'
+extra-deps:
+- prizm-3.0.0
+flags: {}
+extra-package-dbs: []
