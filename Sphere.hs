@@ -4,7 +4,7 @@ import System.Random.MWC (GenIO, createSystemRandom, uniformR)
 import System.Random.MWC.Distributions (standard)
 import Geometry
 import ColorSpace
-import Data.Prizm.Color (CIELAB(..))
+import Data.Prizm.Color (LAB, mkLAB)
 import Data.Function (on)
 import Data.List (sortBy)
 import qualified Data.Vector as V
@@ -33,15 +33,15 @@ picture points t = scaling $ Pictures $ map (uncurry drawPoint) $ coloredPoints'
     coloredPoints' = sortZ coloredPoints
     rotation = rotation3d t'
 
-drawPoint :: CIELAB Double -> Vec -> Picture
+drawPoint :: LAB -> Vec -> Picture
 drawPoint c p = Color (toGloss c) $ Translate x' y' $ circleSolid 0.02
   where (x',y') = vecToPoint p
 
-pointColor :: Vec -> CIELAB Double
-pointColor p = CIELAB (45 + z*15) (x*40) (y*40)
+pointColor :: Vec -> LAB
+pointColor p = mkLAB (45 + z*15) (x*40) (y*40)
   where [x, y, z] = vecToList p
 
-sortZ :: [(CIELAB Double, Vec)] -> [(CIELAB Double, Vec)]
+sortZ :: [(LAB, Vec)] -> [(LAB, Vec)]
 sortZ = sortBy (compare `on` (\(c,p) -> getZ p))
 
 gaussBall :: Int -> GenIO -> IO Vec
@@ -52,6 +52,6 @@ gaussBall n g = do
 uniformSphere :: Int -> GenIO -> IO Vec
 uniformSphere n g = do
    v <- gaussBall n g
-   return $ vnorm v 
-    
+   return $ vnorm v
+
 -- uniformBall :: Int -> IO Vec
