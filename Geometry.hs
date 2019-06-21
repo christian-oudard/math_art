@@ -142,13 +142,12 @@ rotation3d t' = let t = t'*(4/5) in (
 
 rot4d theta = embedMatrix (rot2d theta) (identity 4)
 
-rotation4d t' = let t = t'*(1/2)+100 in (
-  -- (rot4d $ t * tau/61)
-  (switchAxes 2 3 $ rot4d $ t * tau/73) 
-  * (switchAxes 2 4 $ rot4d $ t * tau/83) 
-  * (switchAxes 1 2 $ switchAxes 2 3 $ rot4d $ t * tau/97) 
-  * (switchAxes 1 2 $ switchAxes 2 4 $ rot4d $ t * tau/103) 
-  * (switchAxes 1 3 $ switchAxes 2 4 $ rot4d $ t * tau/117) 
+rotation4d t' = let t = t' in (
+  (switchAxes 2 3 $ rot4d $ t * tau/73)
+  * (switchAxes 2 4 $ rot4d $ -t * tau/83)
+  * (switchAxes 1 2 $ switchAxes 2 4 $ rot4d $ t * tau/97)
+  * (switchAxes 1 2 $ switchAxes 2 3 $ rot4d $ -t * tau/103)
+  * (switchAxes 1 3 $ switchAxes 2 4 $ rot4d $ t * tau/117)
   )
 
 switchAxes a1 a2 = switchRows a1 a2 . switchCols a1 a2
@@ -167,15 +166,15 @@ hyperCubeGraph n = (prevNodes ++ newNodes, prevEdges ++ newEdges ++ crossEdges)
     newNodes = shiftNodes prevNodes
     newEdges = shiftEdges prevEdges
     crossEdges = zip prevNodes newNodes
-    shiftNodes ps = map (+dist) ps
-    shiftEdges es = map (\(a,b) -> (a+dist,b+dist)) es
+    shiftNodes = map (+dist)
+    shiftEdges = map (\(a,b) -> (a+dist, b+dist))
     dist = 2^(n-1)
 
 cartesianProduct :: [[a]] -> [[a]]
-cartesianProduct (axis:[]) = [ [v] | v <- axis ]
+cartesianProduct [axis] = [ [v] | v <- axis ]
 cartesianProduct (axis:rest) = [ v:r | v <- axis, r <- cartesianProduct rest ]
 
-octaplex = map vec $
+octaplex = map vec
   [ [1, 1, 1, 1]
   , [1, 1, 1, -1]
   , [1, 1, -1, 1]
@@ -203,7 +202,7 @@ octaplex = map vec $
   ]
 
 octaplexEdges :: [(Int, Int)]
-octaplexEdges = (
+octaplexEdges =
   hyperCubeEdges 4 ++
   zip (repeat 16) [0..7]
   ++ zip (repeat 17) [8..15]
@@ -213,7 +212,6 @@ octaplexEdges = (
   ++ zip (repeat 21) [2,3,6,7,10,11,14,15]
   ++ zip (repeat 22) [0,2..14]
   ++ zip (repeat 23) [1,3..15]
-  )
 
 embedMatrix :: Matrix a -> Matrix a -> Matrix a
 -- Put matrix a on top of matrix b, where a is smaller.
