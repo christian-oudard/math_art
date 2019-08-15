@@ -33,6 +33,8 @@ module Geometry
   , switchAxes
   , tau
   , circle2d
+  , degToRad
+  , radToDeg
   ) where
 
 import Data.Matrix as M
@@ -242,4 +244,7 @@ circle2d center radius s = center + (rot2d (tau*s) * radiusVector)
 
 -- rotateAxis3 :: Vec -> Double -> (Vec -> Vec)
 -- rotateAxis3 axis theta =  
+
+degToRad d = tau * d / 360
+radToDeg r = 360 * r / tau
 

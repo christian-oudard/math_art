@@ -1,76 +1,47 @@
 import ColorSpace
 import Graphics.Gloss
 
+import Data.Convertible
 import Data.Matrix ((!))
-import Data.List (sortBy)
 import Data.Function (on)
-import Data.Prizm.Color (ColorCoord(..))
-import Data.Prizm.Color.CIE (LAB(unLAB))
-import System.Random.MWC (GenIO, createSystemRandom, uniformR)
+import Data.Prizm.Color (ColorCoord(..), mkRGB)
+import Data.Prizm.Color.CIE (LAB(unLAB), mkLAB, LCH)
 import Geometry
 
-main = do
-  -- gen <- createSystemRandom
-  -- randomColors <- genColors 300 gen
-  -- let gradientColors = map (rainbowGradient gray 35) [0, (1/40) .. 1]
-  animate
-    (InWindow "" (round screenWidth, round screenHeight) (0,0))
-    (toGloss gray)
-    (frame colors)
-  return ()
+import Data.List (sortBy)
 
-pairwise, pairwiseCircular :: [a] -> [(a,a)]
-pairwise xs = zip xs (tail xs)
-pairwiseCircular xs = (last xs, head xs) : pairwise xs
 
-gradientPolygon :: [LAB] -> (Double -> LAB)
-gradientPolygon colors s = (gradients !! i) s'
+main :: IO ()
+main = animate
+  (InWindow "" (round screenWidth, round screenHeight) (0,0))
+  (convert $ grayN 20)
+  (frame allDots)
+
+allDots :: [LAB]
+allDots = edgeColors ++ axisL ++ axisAB 25 ++ axisAB 50 ++ axisAB 75 ++ rainbowDots
+
+rainbowDots :: [LAB]
+rainbowDots = filter inBounds $ map convert $ circleRainbow 50 28
+
+circleRainbow :: Double -> Double -> [LCH]
+circleRainbow l chroma = gradStops 64 $ hueGradient l chroma 0 360
+
+axisL :: [LAB]
+axisL = gradStops 16 $ linearGradient (mkLAB 0 0 0) (mkLAB 100 0 0)
+
+axisAB, axisA, axisB :: Double -> [LAB]
+axisAB l = axisA l ++ axisB l
+axisA l = gradStops 32 $ linearGradient minA maxA
   where
-    gradients = [ linearGradient a b | (a,b) <- pairwiseCircular colors ]
-    len = length colors
-    (i, s') = splitIndex len s
+    minA = boundaryColor (grayN l) $ mkLAB l (-100) 0
+    maxA = boundaryColor (grayN l) $ mkLAB l 100 0
 
-splitIndex :: Int -> Double -> (Int, Double)
--- Take a segment from 0 to 1, and split it into n segments from
--- 0 to 1. Return an appropriate index into the set of n segments.
-splitIndex n s = 
-  let
-    n' = fromIntegral n
-    wrapped = mod' s 1
-    (segmentNumber, s') = divMod' wrapped (1/n')
-    s'' = s' * n'
-  in 
-    (segmentNumber, s'')
+axisB l = gradStops 32 $ linearGradient minB maxB
+  where
+    minB = boundaryColor (grayN l) $ mkLAB l 0 (-100)
+    maxB = boundaryColor (grayN l) $ mkLAB l 0 100
 
-
-div' :: (Real a, Integral b) => a -> a -> b
-div' n d = floor ((toRational n) / (toRational d))
-mod' :: (Real a) => a -> a -> a
-mod' n d = n - (fromInteger f) * d where f = div' n d
-divMod' :: (Real a, Integral b) => a -> a -> (b,a)
-divMod' n d = (div' n d, mod' n d)
-
-rgbGradient (r1,g1,b1) (r2,g2,b2) s = rgb (round $ lerp r1 r2 s) (round $ lerp g1 g2 s) (round $ lerp b1 b2 s)
-
-gr = hexColor 0x7ecf92
-ye = hexColor 0xd6a642
-br = hexColor 0x513520
-pu = hexColor 0x4b3c8a
-pn = hexColor 0xf07687
-
-grad = gradientPolygon [ye, gr, pu, pn]
-iceCreamColors = map (grad . (/40)) [0..40]
-r0b0g0 = (0,0,0)
-r0b0g1 = (0,0,255)
-r0b1g0 = (0,255,0)
-r0b1g1 = (0,255,255)
-r1b0g0 = (255,0,0)
-r1b0g1 = (255,0,255)
-r1b1g0 = (255,255,0)
-r1b1g1 = (255,255,255)
-
-rgbGrad lo hi = map (rgbGradient lo hi) $ map (/20) [0..20]
-
+edgeColors :: [LAB]
 edgeColors =
   rgbGrad r0b0g0 r0b0g1 ++
   rgbGrad r0b0g0 r0b1g0 ++
@@ -84,8 +55,18 @@ edgeColors =
   rgbGrad r1b1g0 r1b1g1 ++
   rgbGrad r1b0g1 r1b1g1 ++
   rgbGrad r0b1g1 r1b1g1
+  where
+    rgbGrad lo hi = map (convert . grad lo hi) $ linSpace 16
+      where grad (r1,g1,b1) (r2,g2,b2) s = mkRGB (round $ lerp r1 r2 s) (round $ lerp g1 g2 s) (round $ lerp b1 b2 s)
+    r0b0g0 = (0,0,0)
+    r0b0g1 = (0,0,255)
+    r0b1g0 = (0,255,0)
+    r0b1g1 = (0,255,255)
+    r1b0g0 = (255,0,0)
+    r1b0g1 = (255,0,255)
+    r1b1g0 = (255,255,0)
+    r1b1g1 = (255,255,255)
 
-colors = iceCreamColors ++ edgeColors
 
 
 -- Constants
@@ -94,16 +75,6 @@ screenWidth = 1600
 screenHeight = 900
 pxPerUnit = 3
 scaling = Scale pxPerUnit pxPerUnit
-
--- Color Generation
-genColors n gen = sequence $ replicate n $ genColor gen
-genColor gen = do
-  r <- genComponent gen
-  g <- genComponent gen
-  b <- genComponent gen
-  return $ rgb (fromIntegral r) (fromIntegral g) (fromIntegral b)
-genComponent :: GenIO -> IO Int
-genComponent g = uniformR (0,255) g
 
 -- Drawing
 
@@ -120,7 +91,7 @@ sortZ = sortBy (compare `on` key)
     key (c, v) = v ! (3,1)
 
 drawDot :: LAB -> Vec -> Picture
-drawDot c v = Color (toGloss c) $ Translate x y $ circleSolid 3
+drawDot c v = Color (convert c) $ Translate x y $ circleSolid 3
   where
     (x, y) = vecToPoint v
 

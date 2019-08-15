@@ -1,14 +1,27 @@
 module ColorSpace
-  ( gray
-  , rgb
+  ( grayN
   , hexColor
   , gradStops
   , linearGradient
   , hueGradient
-  -- , circleGradient
+  , rgbR
+  , rgbG
+  , rgbB
+  , labL
+  , labA
+  , labB
+  , lchChroma
+  , lchHue
+  , inBounds
+  , boundaryColor
+  , linSpace
+  , genColor
+  , genColors
   )
 where
 
+import System.Random.MWC (GenIO, uniformR)
+import Control.Monad (replicateM)
 import Data.Convertible
 import Data.Prizm.Color
   ( RGB(..)
@@ -17,22 +30,16 @@ import Data.Prizm.Color
   , ColorCoord(..)
   , mkRGB
   , mkLAB
+  , mkLCH
   )
-import qualified Data.Matrix as M
 import Geometry
 import Graphics.Gloss
   ( Color
   , makeColor
   )
 
-degToRad d = tau * d / 360
-radToDeg r = 360 * r / tau
-
-rgb :: Integer -> Integer -> Integer -> LAB
-rgb r g b = convert $ mkRGB (fromIntegral r) (fromIntegral g) (fromIntegral b)
-
-gray :: LAB
-gray = mkLAB 50 0 0
+grayN :: Double -> LAB
+grayN l = mkLAB l 0 0
 
 hexColor :: Int -> RGB
 hexColor n = mkRGB r g b
@@ -40,19 +47,42 @@ hexColor n = mkRGB r g b
     (n', b) = n `divMod` 0x100
     (r, g) = n' `divMod` 0x100
 
-polarColor :: Double -> Double -> Double -> LAB
-polarColor l chroma hue = mkLAB l a b
-  where
-    a = chroma * cos hue
-    b = chroma * sin hue
+rgbR, rgbG, rgbB :: Convertible c RGB => c -> Double
+rgbR (unRGB . convert -> ColorCoord(r, _, _)) = realToFrac r
+rgbG (unRGB . convert -> ColorCoord(_, g, _)) = realToFrac g
+rgbB (unRGB . convert -> ColorCoord(_, _, b)) = realToFrac b
 
-gradStops :: Int -> (Double -> LAB) -> [LAB]
-gradStops n grad = map (grad . f) [0..n-1]
+labL, labA, labB :: Convertible c LAB => c -> Double
+labL (unLAB . convert -> ColorCoord(l, _, _)) = realToFrac l
+labA (unLAB . convert -> ColorCoord(_, a, _)) = realToFrac a
+labB (unLAB . convert -> ColorCoord(_, _, b)) = realToFrac b
+
+lchChroma, lchHue :: Convertible c LCH => c -> Double
+lchChroma (unLCH . convert -> ColorCoord(_, chroma, _)) = realToFrac chroma
+lchHue (unLCH . convert -> ColorCoord(_, _, hue)) = realToFrac hue
+
+
+inBounds :: Convertible c RGB => c -> Bool
+inBounds c =
+  0 < rgbR c && rgbR c < 255 &&
+  0 < rgbG c && rgbG c < 255 &&
+  0 < rgbB c && rgbB c < 255
+
+boundaryColor :: LAB -> LAB -> LAB
+boundaryColor start target = head $ dropWhile inBounds $ gradStops 100 $ linearGradient start target
+
+
+gradStops :: Int -> (Double -> a) -> [a]
+gradStops n grad = map grad $ linSpace n
+
+linSpace :: Int -> [Double]
+linSpace n = map f [0..n-1]
   where
-    f i = (i' / (n' - 1))
+    f i = i' / (n' - 1)
       where
         i' = realToFrac i
         n' = realToFrac n
+
 
 linearGradient :: LAB -> LAB -> (Double -> LAB)
 linearGradient start end s = vecToColor $ vlerp start' end' s
@@ -60,16 +90,10 @@ linearGradient start end s = vecToColor $ vlerp start' end' s
     start' = colorToVec start
     end' = colorToVec end
 
-hueGradient:: Double -> Double -> Double -> Double -> (Double -> LAB)
-hueGradient l chroma startHue endHue s = polarColor l chroma hue
+hueGradient:: Double -> Double -> Double -> Double -> (Double -> LCH)
+hueGradient l chroma startHue endHue s = mkLCH l chroma hue
   where
     hue = lerp startHue endHue s
-
--- circleGradient :: LAB -> LAB -> LAB ->  (Double -> LAB)
--- circleGradient a b c s = vecToColor $ circle s
---   where
---     [a', b', c'] = map colorToVec [a, b, c]
---     circle = circle3p a b c
 
 colorToVec :: LAB -> Vec
 colorToVec color = vec [l, a, b]
@@ -93,3 +117,28 @@ instance Convertible LAB Color where
 
 instance Convertible LCH Color where
   safeConvert = convertVia (undefined :: RGB)
+
+instance Convertible RGB RGB where
+  safeConvert = Right
+
+instance Convertible LAB LAB where
+  safeConvert = Right
+
+instance Convertible LCH LCH where
+  safeConvert = Right
+
+
+-- Color Generation
+genColors :: Int -> GenIO -> IO [RGB]
+genColors n gen = replicateM n $ genColor gen
+
+genColor :: GenIO -> IO RGB
+genColor gen = do
+  r <- genComponent gen
+  g <- genComponent gen
+  b <- genComponent gen
+  return $ mkRGB (fromIntegral r) (fromIntegral g) (fromIntegral b)
+  where
+    genComponent :: GenIO -> IO Int
+    genComponent = uniformR (0,255)
+

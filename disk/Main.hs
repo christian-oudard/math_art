@@ -1,6 +1,7 @@
 module Main where
 
 import Data.Complex
+import Geometry (radToDeg)
 import ColorSpace ()
 import Graphics.Gloss
   ( display
@@ -83,6 +84,3 @@ logSpiral radius slant t = (radius:+0) * exp (mkPolar t (tau / 4 - slant))
 
 -- Miscellaneous
 tau = 2*pi
-
-degToRad d = tau * d / 360
-radToDeg r = 360 * r / tau
