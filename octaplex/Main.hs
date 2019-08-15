@@ -1,3 +1,5 @@
+module Main where
+
 import Geometry
   ( Vec
   , vecToPoint
@@ -14,12 +16,16 @@ import Data.Matrix ((!))
 import Data.List (sortBy)
 import Data.Function (on)
 
+speed :: Double
+speed = 0.3
+
 bg1, bg2, lineColor :: Color
 bg1 = toGloss $ mkLAB 5 (-5) (-15)
 bg2 = toGloss $ mkLAB 10 (-5) (-20)
 lineColor = toGloss $ mkLAB 70 5 7
 dotColor = toGloss $ mkLAB 80 5 7
 
+main :: IO ()
 main = do
   g <- createSystemRandom
   t0 <- uniformR (0.0, 10**10) g :: IO Double
@@ -35,7 +41,7 @@ frame' t0 t = Scale 300 300 $ Pictures
     points = octaplex
     rotatedPoints = map (rotation *) points
     lines = [ (rotatedPoints !! i, rotatedPoints !! j) | (i, j) <- octaplexEdges ]
-    rotation = rotation4d (t0 + 0.3 * t)
+    rotation = rotation4d (t0 + speed * t)
 
 drawLines :: [(Vec, Vec)] -> Picture
 drawLines lines = Pictures [ Line [vecToPoint a, vecToPoint b] | (a, b) <- lines ]

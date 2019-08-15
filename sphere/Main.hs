@@ -1,3 +1,5 @@
+module Main where
+
 import Graphics.Gloss
 import Control.Monad (replicateM)
 import System.Random.MWC (GenIO, createSystemRandom, uniformR)
@@ -10,12 +12,19 @@ import Data.List (sortBy)
 import qualified Data.Vector as V
 import qualified Data.Matrix as M
 
+speed :: Double
+speed = 1
+
 screenWidth, screenHeight, pxPerUnit :: Float
 screenWidth = 1600
 screenHeight = 900
 pxPerUnit = 300
-scaling = Scale pxPerUnit pxPerUnit 
 
+
+scaling :: Picture -> Picture
+scaling = Scale pxPerUnit pxPerUnit
+
+main :: IO ()
 main = do
   g <- createSystemRandom
   points <- replicateM 2000 $ uniformSphere 3 g
@@ -24,9 +33,10 @@ main = do
     black
     (picture points)
 
+picture :: Real a => [Vec] -> a -> Picture
 picture points t = scaling $ Pictures $ map (uncurry drawPoint) $ coloredPoints'
   where
-    t' = realToFrac t
+    t' = realToFrac t * speed
     colors = map pointColor points
     points' = map (rotation*) $ points
     coloredPoints = zip colors points'
