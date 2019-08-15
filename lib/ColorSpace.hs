@@ -17,7 +17,14 @@ module ColorSpace
 where
 
 import Data.Convertible
-import Data.Prizm.Color (RGB(..), LAB(..), ColorCoord(..), mkRGB, mkLAB)
+import Data.Prizm.Color
+  ( RGB(..)
+  , LAB(..)
+  , LCH(..)
+  , ColorCoord(..)
+  , mkRGB
+  , mkLAB
+  )
 import qualified Data.Matrix as M
 import Geometry
 import Graphics.Gloss
@@ -102,7 +109,18 @@ colorToVec color = vec [l, a, b]
 vecToColor :: Vec -> LAB
 vecToColor v = mkLAB (getX v) (getY v) (getZ v)
 
--- Tests
--- labL $ polarColor 50 45 25 == 50.0
--- labChroma $ polarColor 50 45 25 == 25.0
--- labHue $ polarColor 50 (tau/8) 25 == tau/8
+
+instance Convertible RGB Color where
+  safeConvert (unRGB -> ColorCoord(r, g, b)) = Right $ makeColor r' g' b' 1.0
+    where
+      r' = realToFrac r / 255
+      g' = realToFrac g / 255
+      b' = realToFrac b / 255
+
+
+instance Convertible LAB Color where
+  safeConvert = convertVia (undefined :: RGB)
+
+
+instance Convertible LCH Color where
+  safeConvert = convertVia (undefined :: RGB)

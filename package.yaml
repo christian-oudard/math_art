@@ -24,6 +24,11 @@ executables:
     main: Main.hs
     dependencies:
       - math-art
+  hypercube:
+    source-dirs: hypercube
+    main: Main.hs
+    dependencies:
+      - math-art
   sphere:
     source-dirs: sphere
     main: Main.hs
