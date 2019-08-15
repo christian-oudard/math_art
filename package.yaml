@@ -29,6 +29,11 @@ executables:
     main: Main.hs
     dependencies:
       - math-art
+  color_polyhedron:
+    source-dirs: color_polyhedron
+    main: Main.hs
+    dependencies:
+      - math-art
   disk:
     source-dirs: disk
     main: Main.hs

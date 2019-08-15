@@ -4,7 +4,7 @@ import Graphics.Gloss
 import Data.Matrix ((!))
 import Data.List (sortBy)
 import Data.Function (on)
-import Data.Prizm.Color (CIELAB(..))
+import Data.Prizm.Color.CIE (LAB(..))
 import System.Random.MWC (GenIO, createSystemRandom, uniformR)
 import Geometry
 
@@ -22,7 +22,7 @@ pairwise, pairwiseCircular :: [a] -> [(a,a)]
 pairwise xs = zip xs (tail xs)
 pairwiseCircular xs = (last xs, head xs) : pairwise xs
 
-gradientPolygon :: [CIELAB Double] -> (Double -> CIELAB Double)
+gradientPolygon :: [LAB] -> (Double -> LAB)
 gradientPolygon colors s = (gradients !! i) s'
   where
     gradients = [ linearGradient a b | (a,b) <- pairwiseCircular colors ]
@@ -115,10 +115,10 @@ frame colors t' = scaling $ Pictures $ map (uncurry drawDot) (sortZ drawData)
 
 sortZ = sortBy (compare `on` key)
   where
-    key :: (CIELAB Double, Vec) -> Double
+    key :: (LAB, Vec) -> Double
     key (c, v) = v ! (3,1)
 
-drawDot :: CIELAB Double -> Vec -> Picture
+drawDot :: LAB -> Vec -> Picture
 drawDot c v = Color (toGloss c) $ Translate x y $ circleSolid 3
   where
     (x, y) = vecToPoint v
