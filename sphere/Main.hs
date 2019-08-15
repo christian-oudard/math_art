@@ -6,6 +6,7 @@ import System.Random.MWC (GenIO, createSystemRandom, uniformR)
 import System.Random.MWC.Distributions (standard)
 import Geometry
 import ColorSpace
+import Data.Convertible
 import Data.Prizm.Color (LAB, mkLAB)
 import Data.Function (on)
 import Data.List (sortBy)
@@ -44,7 +45,7 @@ picture points t = scaling $ Pictures $ map (uncurry drawPoint) $ coloredPoints'
     rotation = rotation3d t'
 
 drawPoint :: LAB -> Vec -> Picture
-drawPoint c p = Color (toGloss c) $ Translate x' y' $ circleSolid 0.02
+drawPoint c p = Color (convert c) $ Translate x' y' $ circleSolid 0.02
   where (x',y') = vecToPoint p
 
 pointColor :: Vec -> LAB

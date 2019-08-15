@@ -10,7 +10,7 @@ import Geometry
 import ColorSpace
 import Graphics.Gloss
 import Data.Prizm.Color (LAB(..), mkLAB)
-
+import Data.Convertible
 import System.Random.MWC (GenIO, createSystemRandom, uniformR)
 import Data.Matrix ((!))
 import Data.List (sortBy)
@@ -19,11 +19,11 @@ import Data.Function (on)
 speed :: Double
 speed = 0.3
 
-bg1, bg2, lineColor :: Color
-bg1 = toGloss $ mkLAB 5 (-5) (-15)
-bg2 = toGloss $ mkLAB 10 (-5) (-20)
-lineColor = toGloss $ mkLAB 70 5 7
-dotColor = toGloss $ mkLAB 80 5 7
+bg1, bg2, lineColor, dotColor :: Color
+bg1 = convert $ mkLAB 5 (-5) (-15)
+bg2 = convert $ mkLAB 10 (-5) (-20)
+lineColor = convert $ mkLAB 70 5 7
+dotColor = convert $ mkLAB 80 5 7
 
 main :: IO ()
 main = do

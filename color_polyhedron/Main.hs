@@ -4,7 +4,8 @@ import Graphics.Gloss
 import Data.Matrix ((!))
 import Data.List (sortBy)
 import Data.Function (on)
-import Data.Prizm.Color.CIE (LAB(..))
+import Data.Prizm.Color (ColorCoord(..))
+import Data.Prizm.Color.CIE (LAB(unLAB))
 import System.Random.MWC (GenIO, createSystemRandom, uniformR)
 import Geometry
 
@@ -123,5 +124,6 @@ drawDot c v = Color (toGloss c) $ Translate x y $ circleSolid 3
   where
     (x, y) = vecToPoint v
 
-colorPosition c = vec [labA c, labB c, labL c - 50]
+colorPosition :: LAB -> Vec
+colorPosition (unLAB -> ColorCoord(l, a, b)) = vec [a, b, l - 50]
 

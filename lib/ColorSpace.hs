@@ -1,14 +1,7 @@
 module ColorSpace
-  ( toGloss
-  , toGlossAlpha
-  , gray
+  ( gray
   , rgb
   , hexColor
-  , labL
-  , labA
-  , labB
-  , labHue
-  , labChroma
   , gradStops
   , linearGradient
   , hueGradient
@@ -32,8 +25,6 @@ import Graphics.Gloss
   , makeColor
   )
 
--- Lightness from 0 to 
--- A and B within the range of about 0-100
 degToRad d = tau * d / 360
 radToDeg r = 360 * r / tau
 
@@ -43,30 +34,8 @@ rgb r g b = convert $ mkRGB (fromIntegral r) (fromIntegral g) (fromIntegral b)
 gray :: LAB
 gray = mkLAB 50 0 0
 
-lab2rgb :: LAB -> RGB
-lab2rgb = convert
-
-toGloss :: LAB -> Color
-toGloss color = toGlossAlpha color 1
-toGlossAlpha color alpha = makeColor r g b alpha
-  where
-    ColorCoord (r', g', b') = unRGB $ lab2rgb $ color
-    r = realToFrac r' / 255
-    g = realToFrac g' / 255
-    b = realToFrac b' / 255
-
-labL, labA, labB :: LAB -> Double
-labL color  = realToFrac l
-  where ColorCoord (l, _, _) = unLAB color
-labA color  = realToFrac a
-  where ColorCoord (_, a, _) = unLAB color
-labB color  = realToFrac b
-  where ColorCoord (_, _, b) = unLAB color
-labHue c = atan2 (labA c) (labB c)
-labChroma c = sqrt $ (labA c)^2 + (labB c)^2
-
-hexColor :: Integer -> LAB
-hexColor n = rgb r g b
+hexColor :: Int -> RGB
+hexColor n = mkRGB r g b
   where
     (n', b) = n `divMod` 0x100
     (r, g) = n' `divMod` 0x100

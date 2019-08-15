@@ -1,6 +1,7 @@
 module Main where
 
 import Data.Complex
+import ColorSpace ()
 import Graphics.Gloss
   ( display
   , animate
@@ -16,22 +17,6 @@ import Data.Convertible (Convertible(..), convert)
 import Data.Convertible.Utils (convertVia)
 import Data.Prizm.Color (ColorCoord(..), RGB(unRGB))
 import Data.Prizm.Color.CIE (LCH, mkLCH, LAB)
-
-instance Convertible RGB Color where
-  safeConvert (unRGB -> ColorCoord(r, g, b)) = Right $ makeColor r' g' b' 1.0
-    where
-      r' = realToFrac r / 255
-      g' = realToFrac g / 255
-      b' = realToFrac b / 255
-
-
-instance Convertible LAB Color where
-  safeConvert = convertVia (undefined :: RGB)
-
-
-instance Convertible LCH Color where
-  safeConvert = convertVia (undefined :: RGB)
-
 
 bgColor, fieldColor, lineColor :: Color
 bgColor = convert $ mkLCH 7 5 (5/16 * tau)

@@ -39,6 +39,11 @@ executables:
     main: Main.hs
     dependencies:
       - math-art
+  rainbow:
+    source-dirs: rainbow
+    main: Main.hs
+    dependencies:
+      - math-art
   disk:
     source-dirs: disk
     main: Main.hs
