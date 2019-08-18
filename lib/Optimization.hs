@@ -101,56 +101,17 @@ biggestRainbow lightness = circleRainbow (mkLAB lightness a' b') chroma'
         algorithm = NELDERMEAD (objective lightness) [lowerbounds, upperbounds] initialStep
 
 
+bisect :: Double -> Double -> Double -> (Double -> Bool) -> Double
+bisect lo hi eps test
+  | (mid - lo) < eps  = lo
+  | otherwise  =
+    if test mid
+    then bisect mid hi eps test
+    else bisect lo mid eps test
+  where
+    mid = (hi + lo) / 2
 
+biggestRainbowAt center = circleRainbow center (optimumChroma center)
 
--- bisect :: Double -> Double -> Double -> (Double -> Bool) -> Double
--- bisect lo hi eps test
---   | (mid - lo) < eps  = lo
---   | otherwise  =
---     if test mid
---     then bisect mid hi eps test
---     else bisect lo mid eps test
---   where
---     mid = (hi + lo) / 2
-
-
--- biggestRainbowAt center = circleRainbow center (optimumChroma center)
-
--- optimumChroma center = bisect 0 100 1e-2 test
---   where test chroma = all inBounds $ circleRainbow center chroma
-
-
--- -- Two-dimensional problem, [A, B].
--- -- -100 < A < 100
--- -- -100 < B < 100
--- biggestRainbow lightness = biggestRainbowAt (mkLAB lightness a' b')
---   where
---     [a', b'] = toList (optimum lightness)
-
---     x0 :: Vector R
---     x0 = fromList [0, 0]
-
---     initialStep :: Maybe InitialStep
---     initialStep = Just $ InitialStep $ fromList [1, 1]
-
---     lowerbounds, upperbounds :: Bounds
---     lowerbounds = LowerBounds $ fromList [-100, -100]
---     upperbounds = UpperBounds $ fromList [100, 100]
-
---     stop :: NonEmpty StoppingCondition
---     stop = ObjectiveRelativeTolerance 1e-5 :| []
-
---     -- Find the largest rainbow at the given center.
---     objective :: Vector R -> Double
---     objective x = negate $ optimumChroma center
---       where
---         [a, b] = toList x
---         center = mkLAB lightness a b
-
---     optimum lightness =
---       case minimizeLocal problem x0 of
---         Right sol -> solutionParams sol
---         Left _ -> error "Optimizer error."
---       where
---         problem = LocalProblem 3 stop algorithm
---         algorithm = NELDERMEAD objective [lowerbounds, upperbounds] initialStep
+optimumChroma center = bisect 0 100 1e-2 test
+  where test chroma = all inBounds $ circleRainbow center chroma
