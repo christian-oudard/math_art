@@ -3,5 +3,8 @@ packages:
 - '.'
 extra-deps:
 - prizm-3.0.0
+- nlopt-haskell-0.1.3.0
+- hmatrix-nlopt-0.1.3.0
+
 flags: {}
 extra-package-dbs: []

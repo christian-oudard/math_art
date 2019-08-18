@@ -1,4 +1,5 @@
 import ColorSpace
+import Optimization
 import Graphics.Gloss
 
 import Data.Convertible
@@ -18,10 +19,11 @@ main = animate
   (frame allDots)
 
 allDots :: [LAB]
-allDots = edgeColors ++ axisL ++ axisAB 25 ++ axisAB 50 ++ axisAB 75 ++ rainbowDots
+-- allDots = edgeColors ++ axisL ++ axisAB 25 ++ axisAB 50 ++ axisAB 75 ++ rainbowDots
+allDots = edgeColors ++ rainbowDots
 
 rainbowDots :: [LAB]
-rainbowDots = filter inBounds $ map convert $ circleRainbow 50 28
+rainbowDots = filter inBounds $ map convert $ concatMap biggestRainbow [5, 20, 35, 50, 65, 80, 95]
 
 circleRainbow :: Double -> Double -> [LCH]
 circleRainbow l chroma = gradStops 64 $ hueGradient l chroma 0 360
@@ -73,7 +75,7 @@ edgeColors =
 screenWidth, screenHeight, pxPerUnit :: Float
 screenWidth = 1600
 screenHeight = 900
-pxPerUnit = 3
+pxPerUnit = 6
 scaling = Scale pxPerUnit pxPerUnit
 
 -- Drawing

@@ -4,6 +4,7 @@ module ColorSpace
   , gradStops
   , linearGradient
   , hueGradient
+  , circleRainbow
   , rgbR
   , rgbG
   , rgbB
@@ -17,6 +18,8 @@ module ColorSpace
   , linSpace
   , genColor
   , genColors
+  , vecToColor
+  , colorToVec
   )
 where
 
@@ -95,6 +98,12 @@ hueGradient l chroma startHue endHue s = mkLCH l chroma hue
   where
     hue = lerp startHue endHue s
 
+circleRainbow :: LAB -> Double -> [LAB]
+circleRainbow center chroma = map (addColor center) stops
+  where
+    stops :: [LAB]
+    stops = map convert $ gradStops 64 $ hueGradient 0 chroma 0 360
+
 colorToVec :: LAB -> Vec
 colorToVec color = vec [l, a, b]
   where (ColorCoord (l, a, b)) = unLAB color
@@ -102,6 +111,8 @@ colorToVec color = vec [l, a, b]
 vecToColor :: Vec -> LAB
 vecToColor v = mkLAB (getX v) (getY v) (getZ v)
 
+addColor :: LAB -> LAB -> LAB
+addColor a b = vecToColor $ colorToVec a + colorToVec b
 
 instance Convertible RGB Color where
   safeConvert (unRGB -> ColorCoord(r, g, b)) = Right $ makeColor r' g' b' 1.0
