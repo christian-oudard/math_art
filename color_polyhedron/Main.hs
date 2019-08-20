@@ -25,9 +25,6 @@ allDots = edgeColors ++ rainbowDots
 rainbowDots :: [LAB]
 rainbowDots = filter inBounds $ map convert $ concatMap biggestRainbow [5, 20, 35, 50, 65, 80, 95]
 
-circleRainbow :: Double -> Double -> [LCH]
-circleRainbow l chroma = gradStops 64 $ hueGradient l chroma 0 360
-
 axisL :: [LAB]
 axisL = gradStops 16 $ linearGradient (mkLAB 0 0 0) (mkLAB 100 0 0)
 
