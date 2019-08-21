@@ -19,11 +19,7 @@ main = animate
   (frame allDots)
 
 allDots :: [LAB]
--- allDots = edgeColors ++ axisL ++ axisAB 25 ++ axisAB 50 ++ axisAB 75 ++ rainbowDots
-allDots = edgeColors ++ rainbowDots
-
-rainbowDots :: [LAB]
-rainbowDots = filter inBounds $ map convert $ concatMap biggestRainbow [5, 20, 35, 50, 65, 80, 95]
+allDots = edgeColors ++ axisL ++ axisAB 50 ++ biggestRainbowAt (grayN 50)
 
 axisL :: [LAB]
 axisL = gradStops 16 $ linearGradient (mkLAB 0 0 0) (mkLAB 100 0 0)

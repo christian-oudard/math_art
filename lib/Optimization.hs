@@ -1,11 +1,14 @@
 module Optimization
   ( biggestRainbow
+  , biggestRainbowAt
+  , boundaryColor
   )
   where
 
 import ColorSpace
   ( grayN
   , hueGradient
+  , linearGradient
   , gradStops
   , inBounds
   , vecToColor
@@ -110,6 +113,14 @@ bisect lo hi eps test
     else bisect lo mid eps test
   where
     mid = (hi + lo) / 2
+
+boundaryColor :: LAB -> LAB -> LAB
+boundaryColor start target = head $ dropWhile inBounds $ gradStops 100 $ linearGradient start target
+
+boundaryColor start target = grad $ bisect 0 1 1e-3 test
+  where
+    grad = linearGradient start target
+    test s = inBounds $ grad s
 
 biggestRainbowAt center = circleRainbow center (optimumChroma center)
 

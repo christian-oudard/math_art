@@ -14,7 +14,6 @@ module ColorSpace
   , lchChroma
   , lchHue
   , inBounds
-  , boundaryColor
   , linSpace
   , genColor
   , genColors
@@ -70,10 +69,6 @@ inBounds c =
   0 < rgbR c && rgbR c < 255 &&
   0 < rgbG c && rgbG c < 255 &&
   0 < rgbB c && rgbB c < 255
-
-boundaryColor :: LAB -> LAB -> LAB
-boundaryColor start target = head $ dropWhile inBounds $ gradStops 100 $ linearGradient start target
-
 
 gradStops :: Int -> (Double -> a) -> [a]
 gradStops n grad = map grad $ linSpace n
