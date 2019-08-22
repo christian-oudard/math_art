@@ -88,7 +88,6 @@ vdiv c = fmap (/c)
 vmidpoint :: Vec -> Vec -> Vec
 vmidpoint a b = vdiv 2 (a+b)
 
-
 lerp :: Double -> Double -> (Double -> Double)
 lerp start end s = start + s * (end - start)
 

@@ -1,7 +1,9 @@
 module Optimization
   ( biggestRainbow
+  , biggestRainbow'
   , biggestRainbowAt
   , boundaryColor
+  , dotGrid
   )
   where
 
@@ -14,6 +16,7 @@ import ColorSpace
   , vecToColor
   , colorToVec
   , circleRainbow
+  , linSpace
   )
 
 import Data.Convertible
@@ -117,7 +120,7 @@ bisect lo hi eps test
 boundaryColor :: LAB -> LAB -> LAB
 boundaryColor start target = head $ dropWhile inBounds $ gradStops 100 $ linearGradient start target
 
-boundaryColor start target = grad $ bisect 0 1 1e-3 test
+boundaryColor start target = grad $ bisect 0 1 1e-2 test
   where
     grad = linearGradient start target
     test s = inBounds $ grad s
@@ -126,3 +129,12 @@ biggestRainbowAt center = circleRainbow center (optimumChroma center)
 
 optimumChroma center = bisect 0 100 1e-2 test
   where test chroma = all inBounds $ circleRainbow center chroma
+
+dotGrid :: Double -> [LAB]
+dotGrid l = filter inBounds [ mkLAB l a b | a <- xs, b <- xs ]
+  where
+    xs = linSpace (-100) 100 40
+
+biggestRainbow' :: Double -> [LAB]
+biggestRainbow' l = biggestRainbowAt $ maximumBy (comparing optimumChroma) $ dotGrid l
+

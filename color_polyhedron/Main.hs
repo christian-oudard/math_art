@@ -1,6 +1,7 @@
 import ColorSpace
 import Optimization
 import Graphics.Gloss
+import Graphics.Gloss.Interface.Environment (getScreenSize)
 
 import Data.Convertible
 import Data.Matrix ((!))
@@ -11,15 +12,22 @@ import Geometry
 
 import Data.List (sortBy)
 
+-- Constants
+pxPerUnit = 6
+scaling = Scale pxPerUnit pxPerUnit
 
 main :: IO ()
-main = animate
-  (InWindow "" (round screenWidth, round screenHeight) (0,0))
-  (convert $ grayN 20)
-  (frame allDots)
+main = do
+  screenSize <- getScreenSize
+  animate
+    (InWindow "" screenSize (0,0))
+    (convert $ grayN 50)
+    (frame allDots)
 
 allDots :: [LAB]
-allDots = edgeColors ++ axisL ++ axisAB 50 ++ biggestRainbowAt (grayN 50)
+-- allDots = edgeColors ++ axisL ++ dotGrid 25 ++ dotGrid 50 ++ dotGrid 75
+allDots = edgeColors ++ axisL ++ biggestRainbow' 25 ++ biggestRainbow' 50 ++ biggestRainbow' 75
+-- allDots = edgeColors ++ dotGrid 75 ++ dotGrid 25
 
 axisL :: [LAB]
 axisL = gradStops 16 $ linearGradient (mkLAB 0 0 0) (mkLAB 100 0 0)
@@ -51,7 +59,7 @@ edgeColors =
   rgbGrad r1b0g1 r1b1g1 ++
   rgbGrad r0b1g1 r1b1g1
   where
-    rgbGrad lo hi = map (convert . grad lo hi) $ linSpace 16
+    rgbGrad lo hi = map (convert . grad lo hi) $ linSpace 0 1 16
       where grad (r1,g1,b1) (r2,g2,b2) s = mkRGB (round $ lerp r1 r2 s) (round $ lerp g1 g2 s) (round $ lerp b1 b2 s)
     r0b0g0 = (0,0,0)
     r0b0g1 = (0,0,255)
@@ -63,13 +71,6 @@ edgeColors =
     r1b1g1 = (255,255,255)
 
 
-
--- Constants
-screenWidth, screenHeight, pxPerUnit :: Float
-screenWidth = 1600
-screenHeight = 900
-pxPerUnit = 6
-scaling = Scale pxPerUnit pxPerUnit
 
 -- Drawing
 
@@ -86,7 +87,7 @@ sortZ = sortBy (compare `on` key)
     key (c, v) = v ! (3,1)
 
 drawDot :: LAB -> Vec -> Picture
-drawDot c v = Color (convert c) $ Translate x y $ circleSolid 3
+drawDot c v = Color (convert c) $ Translate x y $ circleSolid 2
   where
     (x, y) = vecToPoint v
 

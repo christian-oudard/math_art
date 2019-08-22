@@ -71,16 +71,15 @@ inBounds c =
   0 < rgbB c && rgbB c < 255
 
 gradStops :: Int -> (Double -> a) -> [a]
-gradStops n grad = map grad $ linSpace n
+gradStops n grad = map grad $ linSpace 0 1 n
 
-linSpace :: Int -> [Double]
-linSpace n = map f [0..n-1]
+linSpace :: Double -> Double -> Int -> [Double]
+linSpace start stop n = map f [0..n-1]
   where
-    f i = i' / (n' - 1)
+    f i = lerp start stop $ i' / (n' - 1)
       where
         i' = realToFrac i
         n' = realToFrac n
-
 
 linearGradient :: LAB -> LAB -> (Double -> LAB)
 linearGradient start end s = vecToColor $ vlerp start' end' s
